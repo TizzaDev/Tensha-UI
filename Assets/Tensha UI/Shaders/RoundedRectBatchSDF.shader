@@ -52,7 +52,6 @@ Shader "TenshaUI/RoundedRectBatchSDF"
             float _OutlineWidth[512];
             float2 _SDFSize[512];
             float4 _SDFRadii[512];
-            float2 _SDFPadding[512];
 
             v2f vert (appdata v)
             {
@@ -81,10 +80,6 @@ Shader "TenshaUI/RoundedRectBatchSDF"
 
                 float2 _Size = _SDFSize[dataID];
                 float4 _Radii = _SDFRadii[dataID];
-                float2 _Padding = _SDFPadding[dataID];
-
-                float2 normalizedPadding = float2(_Padding.x / _Size.x, _Padding.y / _Size.y);
-                uv = uv * (1 + normalizedPadding * 2) - normalizedPadding * 2;
 
                 fixed4 this_OutlineColor = _OutlineColor[dataID];
                 float this_OutlineWidth = _OutlineWidth[dataID];
@@ -97,8 +92,8 @@ Shader "TenshaUI/RoundedRectBatchSDF"
                 float dist = sdRoundedBox(position, halfSize, _Radii);
                 float delta = fwidth(dist);
 
-                float fillAlpha = 1 - smoothstep(-delta, 0, dist);
-                float outlineAlpha = (1 - smoothstep(this_OutlineWidth - delta, this_OutlineWidth, dist));
+                float fillAlpha = 1 - smoothstep(-delta, 0, dist + this_OutlineWidth);
+                float outlineAlpha = 1 - smoothstep(-delta, 0, dist);
 
                 outlineAlpha *= this_OutlineColor.a;
                 fillAlpha *= this_FillColor.a;

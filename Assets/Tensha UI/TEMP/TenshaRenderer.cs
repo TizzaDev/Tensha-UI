@@ -7,6 +7,8 @@ public class TenshaRenderer : MonoBehaviour
 {
     [SerializeField]
     private Material testMaterial;
+    [SerializeField]
+    private float outlineWidth;
 
     private RenderParams paramsCache;
     private MaterialPropertyBlock propsCache;
@@ -55,7 +57,7 @@ public class TenshaRenderer : MonoBehaviour
 
         List<Vector3> vertices = new();
 
-        int FACES_AMOUNT = 5*5;
+        int FACES_AMOUNT = 10*10;
 
         int SUB_FACES_AMOUNT = (int)Mathf.Sqrt(FACES_AMOUNT);
 
@@ -68,12 +70,11 @@ public class TenshaRenderer : MonoBehaviour
 
                 Vector2 pos = ConvertScreenPositionToWorldPosition(new Vector2(stepX * i, stepY * j));
                 Vector2 size = ConvertScreenSizeToWorldSize(new Vector2(stepX, stepY));
-                Vector2 padding = ConvertScreenSizeToWorldSize(new Vector2(3f, 3f));
 
-                vertices.Add(pos - padding);
-                vertices.Add(new Vector3(pos.x + size.x + padding.x, pos.y - padding.y, 0f));
-                vertices.Add(new Vector3(pos.x - padding.x, pos.y + size.y + padding.y, 0f));
-                vertices.Add(pos + size + padding);
+                vertices.Add(pos);
+                vertices.Add(new Vector3(pos.x + size.x, pos.y, 0f));
+                vertices.Add(new Vector3(pos.x, pos.y + size.y, 0f));
+                vertices.Add(pos + size);
             }
         }
 
@@ -121,7 +122,7 @@ public class TenshaRenderer : MonoBehaviour
         });
 
         propsCache.SetFloatArray("_OutlineWidth", new float[] {
-            3f
+            0f
         });
 
         propsCache.SetVectorArray("_SDFSize", new Vector4[] {
@@ -129,11 +130,7 @@ public class TenshaRenderer : MonoBehaviour
         });
 
         propsCache.SetVectorArray("_SDFRadii", new Vector4[] {
-            new Vector4(40f, 40f, 40f, 40f)
-        });
-
-        propsCache.SetVectorArray("_SDFPadding", new Vector4[] {
-            new Vector4(3f, 3f, 0f, 0f)
+            new Vector4(10f, 10f, 10f, 10f)
         });
     }
 
@@ -144,6 +141,10 @@ public class TenshaRenderer : MonoBehaviour
         Matrix4x4 offset = Matrix4x4.Translate(
             new Vector3(0, 0, -Camera.main.nearClipPlane)
         );
+
+        propsCache.SetFloatArray("_OutlineWidth", new float[] {
+            outlineWidth
+        });
 
         Graphics.RenderMesh(
                     paramsCache,
