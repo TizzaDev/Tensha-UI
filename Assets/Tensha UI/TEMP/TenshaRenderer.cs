@@ -55,11 +55,9 @@ public class TenshaRenderer : MonoBehaviour
 
         List<Vector3> vertices = new();
 
-        int FACES_AMOUNT = 1600;
+        int FACES_AMOUNT = 5*5;
 
         int SUB_FACES_AMOUNT = (int)Mathf.Sqrt(FACES_AMOUNT);
-
-
 
         for(int i = 0; i < SUB_FACES_AMOUNT; i++)
         {
@@ -70,11 +68,12 @@ public class TenshaRenderer : MonoBehaviour
 
                 Vector2 pos = ConvertScreenPositionToWorldPosition(new Vector2(stepX * i, stepY * j));
                 Vector2 size = ConvertScreenSizeToWorldSize(new Vector2(stepX, stepY));
+                Vector2 padding = ConvertScreenSizeToWorldSize(new Vector2(3f, 3f));
 
-                vertices.Add(pos);
-                vertices.Add(new Vector3(pos.x + size.x, pos.y, 0f));
-                vertices.Add(new Vector3(pos.x, pos.y + size.y, 0f));
-                vertices.Add(pos + size);
+                vertices.Add(pos - padding);
+                vertices.Add(new Vector3(pos.x + size.x + padding.x, pos.y - padding.y, 0f));
+                vertices.Add(new Vector3(pos.x - padding.x, pos.y + size.y + padding.y, 0f));
+                vertices.Add(pos + size + padding);
             }
         }
 
@@ -94,32 +93,47 @@ public class TenshaRenderer : MonoBehaviour
 
         meshCache.SetTriangles(triangles, 0);
 
+        List<Vector2> IDData = new();
         List<Vector2> UVData = new();
 
         for (int i = 0; i < FACES_AMOUNT; i++)
         {
-            if(i % 2 == 0)
-            {
-                UVData.Add(new Vector2(1f, 0f));
-                UVData.Add(new Vector2(2f, 0f));
-                UVData.Add(new Vector2(1f, 0f));
-                UVData.Add(new Vector2(2f, 0f));
-            } else
-            {
-                UVData.Add(new Vector2(3f, 0f));
-                UVData.Add(new Vector2(4f, 0f));
-                UVData.Add(new Vector2(3f, 0f));
-                UVData.Add(new Vector2(4f, 0f));
-            }
+            IDData.Add(new Vector2(0f, 0f));
+            IDData.Add(new Vector2(0f, 0f));
+            IDData.Add(new Vector2(0f, 0f));
+            IDData.Add(new Vector2(0f, 0f));
+
+            UVData.Add(new Vector2(0f, 0f));
+            UVData.Add(new Vector2(1f, 0f));
+            UVData.Add(new Vector2(0f, 1f));
+            UVData.Add(new Vector2(1f, 1f));
         }
 
-        meshCache.SetUVs(1, UVData);
+        meshCache.SetUVs(1, IDData);
+        meshCache.SetUVs(2, UVData);
 
-        propsCache.SetVectorArray("_TestColors", new Vector4[] {
-            new Vector4(1f, 0f, 0f, 1f),
-            new Vector4(0f, 1f, 0f, 1f),
-            new Vector4(0f, 0f, 1f, 1f),
-            new Vector4(1f, 0f, 1f, 1f)
+        propsCache.SetVectorArray("_FillColor", new Vector4[] {
+            new Vector4(1f, 0f, 0f, 1f)
+        });
+
+        propsCache.SetVectorArray("_OutlineColor", new Vector4[] {
+            new Vector4(0f, 0f, 0f, 1f)
+        });
+
+        propsCache.SetFloatArray("_OutlineWidth", new float[] {
+            3f
+        });
+
+        propsCache.SetVectorArray("_SDFSize", new Vector4[] {
+            new Vector2(((float)Screen.width / SUB_FACES_AMOUNT), ((float)Screen.height / SUB_FACES_AMOUNT))
+        });
+
+        propsCache.SetVectorArray("_SDFRadii", new Vector4[] {
+            new Vector4(40f, 40f, 40f, 40f)
+        });
+
+        propsCache.SetVectorArray("_SDFPadding", new Vector4[] {
+            new Vector4(3f, 3f, 0f, 0f)
         });
     }
 
