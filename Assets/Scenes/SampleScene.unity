@@ -370,6 +370,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testMaterial: {fileID: 2100000, guid: b26c484f7cd0ec04dbf5586cf11acc7a, type: 2}
+  outlineWidth: 3
 --- !u!4 &1780637962
 Transform:
   m_ObjectHideFlags: 0

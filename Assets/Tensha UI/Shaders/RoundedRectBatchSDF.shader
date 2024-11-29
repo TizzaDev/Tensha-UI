@@ -85,15 +85,15 @@ Shader "TenshaUI/RoundedRectBatchSDF"
                 float this_OutlineWidth = _OutlineWidth[dataID];
                 fixed4 this_FillColor = _FillColor[dataID];
 
-                float2 position = (uv - 0.5) * _Size;
+                float2 position = (uv - 0.5) * (_Size + float2(this_OutlineWidth * 2, this_OutlineWidth * 2));
                 float2 halfSize = _Size * 0.5;
 
                 // Signed distance field calculation
                 float dist = sdRoundedBox(position, halfSize, _Radii);
                 float delta = fwidth(dist);
 
-                float fillAlpha = 1 - smoothstep(-delta, 0, dist + this_OutlineWidth);
-                float outlineAlpha = 1 - smoothstep(-delta, 0, dist);
+                float fillAlpha = 1 - smoothstep(-delta, 0, dist + (this_OutlineWidth * 0.5));
+                float outlineAlpha = 1 - smoothstep(-delta, 0, dist - (this_OutlineWidth * 0.5));
 
                 outlineAlpha *= this_OutlineColor.a;
                 fillAlpha *= this_FillColor.a;

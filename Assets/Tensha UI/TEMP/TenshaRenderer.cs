@@ -14,6 +14,7 @@ public class TenshaRenderer : MonoBehaviour
     private MaterialPropertyBlock propsCache;
     private Mesh meshCache;
 
+    private int FACES_AMOUNT = 3 * 3;
     private Vector2 GetMainCameraWorldSize()
     {
         float screenHeightInUnits = Camera.main.orthographicSize * 2;
@@ -46,6 +47,36 @@ public class TenshaRenderer : MonoBehaviour
         );
     }
 
+    private Vector2 UpdateMesh(int FACES_AMOUNT)
+    {
+        List<Vector3> vertices = new();
+
+        int SUB_FACES_AMOUNT = (int)Mathf.Sqrt(FACES_AMOUNT);
+
+        float stepX = (float)Screen.width / SUB_FACES_AMOUNT;
+        float stepY = (float)Screen.height / SUB_FACES_AMOUNT;
+
+        for (int i = 0; i < 1; i++)
+        {
+            for (int j = 0; j < 1; j++)
+            {
+                Vector2 pos = ConvertScreenPositionToWorldPosition(new Vector2((stepX+2f) * i, (stepY + 2f) * j));
+                Vector2 size = ConvertScreenSizeToWorldSize(new Vector2(stepX, stepY));
+
+                float outlineScaled = ConvertScreenSizeToWorldSize(new Vector2(outlineWidth, outlineWidth)).x;
+
+                vertices.Add(pos - new Vector2(outlineScaled, outlineScaled));
+                vertices.Add(new Vector3(pos.x + size.x + outlineScaled, pos.y - outlineScaled, 0f));
+                vertices.Add(new Vector3(pos.x - outlineScaled, pos.y + size.y + outlineScaled, 0f));
+                vertices.Add(pos + size + new Vector2(outlineScaled, outlineScaled));
+            }
+        }
+
+        meshCache.SetVertices(vertices);
+
+        return new Vector2(stepX, stepY);
+    }
+
     private void Awake()
     {
         paramsCache = new RenderParams();
@@ -55,34 +86,14 @@ public class TenshaRenderer : MonoBehaviour
         paramsCache.renderingLayerMask = GraphicsSettings.defaultRenderingLayerMask;
         meshCache = new Mesh();
 
-        List<Vector3> vertices = new();
 
-        int FACES_AMOUNT = 10*10;
+        Vector2 size = UpdateMesh(FACES_AMOUNT);
 
-        int SUB_FACES_AMOUNT = (int)Mathf.Sqrt(FACES_AMOUNT);
 
-        for(int i = 0; i < SUB_FACES_AMOUNT; i++)
-        {
-            for (int j = 0; j < SUB_FACES_AMOUNT; j++)
-            {
-                float stepX = (float)Screen.width / SUB_FACES_AMOUNT;
-                float stepY = (float)Screen.height / SUB_FACES_AMOUNT;
-
-                Vector2 pos = ConvertScreenPositionToWorldPosition(new Vector2(stepX * i, stepY * j));
-                Vector2 size = ConvertScreenSizeToWorldSize(new Vector2(stepX, stepY));
-
-                vertices.Add(pos);
-                vertices.Add(new Vector3(pos.x + size.x, pos.y, 0f));
-                vertices.Add(new Vector3(pos.x, pos.y + size.y, 0f));
-                vertices.Add(pos + size);
-            }
-        }
-
-        meshCache.SetVertices(vertices);
 
         List<int> triangles = new();
 
-        for (int i = 0; i < FACES_AMOUNT; i++)
+        for (int i = 0; i < 1; i++)
         {
             triangles.Add(0 + (i * 4));
             triangles.Add(2 + (i * 4));
@@ -97,7 +108,7 @@ public class TenshaRenderer : MonoBehaviour
         List<Vector2> IDData = new();
         List<Vector2> UVData = new();
 
-        for (int i = 0; i < FACES_AMOUNT; i++)
+        for (int i = 0; i < 1; i++)
         {
             IDData.Add(new Vector2(0f, 0f));
             IDData.Add(new Vector2(0f, 0f));
@@ -122,15 +133,15 @@ public class TenshaRenderer : MonoBehaviour
         });
 
         propsCache.SetFloatArray("_OutlineWidth", new float[] {
-            0f
+            outlineWidth
         });
 
         propsCache.SetVectorArray("_SDFSize", new Vector4[] {
-            new Vector2(((float)Screen.width / SUB_FACES_AMOUNT), ((float)Screen.height / SUB_FACES_AMOUNT))
+            size
         });
 
         propsCache.SetVectorArray("_SDFRadii", new Vector4[] {
-            new Vector4(10f, 10f, 10f, 10f)
+            new Vector4(35f, 35f, 35f, 35f)
         });
     }
 
@@ -139,18 +150,22 @@ public class TenshaRenderer : MonoBehaviour
     private void Update()
     {
         Matrix4x4 offset = Matrix4x4.Translate(
-            new Vector3(0, 0, -Camera.main.nearClipPlane)
+            new Vector3(0, 0, -Camera.main.nearClipPlane-0.1f)
         );
 
+        var size = UpdateMesh(FACES_AMOUNT);
         propsCache.SetFloatArray("_OutlineWidth", new float[] {
             outlineWidth
         });
+        propsCache.SetVectorArray("_SDFSize", new Vector4[] {
+            size
+        });
 
         Graphics.RenderMesh(
-                    paramsCache,
-                    meshCache,
-                    0,
-                    Camera.main.cameraToWorldMatrix * offset
-                );
+            paramsCache,
+            meshCache,
+            0,
+            Camera.main.cameraToWorldMatrix * offset
+        );
     }
 }
