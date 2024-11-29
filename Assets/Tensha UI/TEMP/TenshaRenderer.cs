@@ -9,6 +9,8 @@ public class TenshaRenderer : MonoBehaviour
     private Material testMaterial;
     [SerializeField]
     private float outlineWidth;
+    [SerializeField]
+    private float outlineDirection = 0f;
 
     private RenderParams paramsCache;
     private MaterialPropertyBlock propsCache;
@@ -47,7 +49,7 @@ public class TenshaRenderer : MonoBehaviour
         );
     }
 
-    private Vector2 UpdateMesh(int FACES_AMOUNT)
+    private Vector2 UpdateMesh(int FACES_AMOUNT, float outlineDirection)
     {
         List<Vector3> vertices = new();
 
@@ -64,6 +66,8 @@ public class TenshaRenderer : MonoBehaviour
                 Vector2 size = ConvertScreenSizeToWorldSize(new Vector2(stepX, stepY));
 
                 float outlineScaled = ConvertScreenSizeToWorldSize(new Vector2(outlineWidth, outlineWidth)).x;
+                //Debug.Log(Mathf.Clamp01((1f + outlineDirection) / 2f));
+                outlineScaled *= Mathf.Clamp01((1f+outlineDirection) / 2f);
 
                 vertices.Add(pos - new Vector2(outlineScaled, outlineScaled));
                 vertices.Add(new Vector3(pos.x + size.x + outlineScaled, pos.y - outlineScaled, 0f));
@@ -87,7 +91,7 @@ public class TenshaRenderer : MonoBehaviour
         meshCache = new Mesh();
 
 
-        Vector2 size = UpdateMesh(FACES_AMOUNT);
+        Vector2 size = UpdateMesh(FACES_AMOUNT, outlineDirection);
 
 
 
@@ -136,6 +140,10 @@ public class TenshaRenderer : MonoBehaviour
             outlineWidth
         });
 
+        propsCache.SetFloatArray("_OutlineDirection", new float[] {
+            outlineDirection
+        });
+
         propsCache.SetVectorArray("_SDFSize", new Vector4[] {
             size
         });
@@ -150,15 +158,18 @@ public class TenshaRenderer : MonoBehaviour
     private void Update()
     {
         Matrix4x4 offset = Matrix4x4.Translate(
-            new Vector3(0, 0, -Camera.main.nearClipPlane-0.1f)
+            new Vector3(0, 0, - Camera.main.nearClipPlane - 0.1f)
         );
 
-        var size = UpdateMesh(FACES_AMOUNT);
+        var size = UpdateMesh(FACES_AMOUNT, outlineDirection);
         propsCache.SetFloatArray("_OutlineWidth", new float[] {
             outlineWidth
         });
         propsCache.SetVectorArray("_SDFSize", new Vector4[] {
             size
+        });
+        propsCache.SetFloatArray("_OutlineDirection", new float[] {
+            outlineDirection
         });
 
         Graphics.RenderMesh(
